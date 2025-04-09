@@ -1,14 +1,12 @@
-
-
 import os
 from pprint import pprint
 import requests
 import json
 import configparser
-
+from tqdm import tqdm
+from time import sleep
 
 class ydAPIclient:
-
     API_YD_BASE_URL = 'https://cloud-api.yandex.net/v1/disk/resources'
 
     def __init__(self, yd_token):
@@ -48,8 +46,7 @@ class ydAPIclient:
         params = self.get_common_params()
         files_list = self.list_files('images')
         try:
-            print('Загрузка фотографий на сервер Яндекс Диска...')
-            for file in files_list:
+            for file in tqdm(files_list, desc="Загрузка файлов", unit="файл"):
                 params.update({'path':f'{upload_folder}/{file}'})
                 response = requests.get(self._build_url_('upload'), params=params, headers=headers)
                 url_for_upload = response.json()['href']
@@ -58,7 +55,6 @@ class ydAPIclient:
             return 'Файлы успешно загружены на Яндекс Диск.'
         except:
             return 'Ошибка, файлы не были загружены.'
-
 
 class vkAPIclient:
     API_BASE_URL = 'https://api.vk.com/method'
@@ -86,8 +82,7 @@ class vkAPIclient:
         print('Получение фотографий со страницы пользователя...')
         response = self.get_photos()
         json_files_list = []
-        print('Скачивание фотографий на компьютер в папку images...')
-        for resp in response['response']['items']:
+        for resp in tqdm(response['response']['items'], desc="Скачивание файлов", unit="файл"):
             url = (resp['orig_photo']['url'])
             file_name = resp['likes']['count']
             picture_response = requests.get(url)
@@ -109,8 +104,6 @@ if __name__ == '__main__':
     config.read('settings.ini')
     vk_token = config['Tokens']['vk_token']
     vk_id = config['Tokens']['vk_id']
-    print(vk_token)
-    
     yd_token = config['Tokens']['yd_token']
     vk_client = vkAPIclient(vk_token, vk_id)
     yd_client = ydAPIclient(yd_token)
